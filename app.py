@@ -13,7 +13,7 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-# Прямая ссылка на мобильный YouTube без прокси и воркеров
+# Прямая ссылка на мобильный YouTube без сторонних прокси
 YOUTUBE_URL = "https://m.youtube.com"
 PORT = int(os.getenv("PORT", 10000))
 
@@ -53,7 +53,7 @@ async def handle_ping(request):
     return web.Response(text="Bot is running!")
 
 async def main():
-    # 1. Запускаем локальный веб-сервер для Render
+    # Запуск локального веб-сервера для Render
     app = web.Application()
     app.router.add_get("/", handle_ping)
     runner = web.AppRunner(app)
@@ -62,7 +62,7 @@ async def main():
     await site.start()
     logging.info(f"Web server successfully started on port {PORT}")
 
-    # 2. Запускаем телеграм-бота
+    # Запуск бота
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Starting bot polling...")
     await dp.start_polling(bot)
