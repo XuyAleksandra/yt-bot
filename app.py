@@ -13,16 +13,17 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-# Ссылка на твой Cloudflare Worker, который теперь проксирует настоящий YouTube
+# Ссылка на твой Cloudflare Worker для обхода блокировок внутри Mini App
 YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
 PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+# Кнопка для открытия YouTube прямо в Telegram Mini App
 main_inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Открыть YouTube", web_app=WebAppInfo(url=YOUTUBE_URL))],
+        [InlineKeyboardButton(text="▶️ Открыть YouTube в Mini App", web_app=WebAppInfo(url=YOUTUBE_URL))],
         [InlineKeyboardButton(text="🔄 Перезапустить", callback_data="restart")]
     ]
 )
@@ -36,7 +37,7 @@ async def command_start_handler(message: Message) -> None:
     
     await message.answer(
         f"Привет!\n\n"
-        f"Нажми на кнопку ниже, чтобы открыть YouTube:",
+        f"Нажми на кнопку ниже, чтобы запустить YouTube в мини-аппе:",
         reply_markup=main_inline_keyboard
     )
 
@@ -63,7 +64,7 @@ async def start_web_server():
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-    await asyncio.gather(
+    asyncio.gather(
         start_web_server(),
         dp.start_polling(bot)
     )
