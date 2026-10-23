@@ -13,7 +13,7 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-# Ссылка на твой Cloudflare Worker для обхода блокировок
+# Ссылка на ваш Cloudflare Worker для обхода блокировок
 YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
 PORT = int(os.getenv("PORT", 10000))
 
@@ -49,7 +49,7 @@ async def restart_callback(callback: CallbackQuery) -> None:
     )
     await callback.answer("Готово!")
 
-# Красивый HTML/JS интерфейс каталога YouTube с плеером внутри Mini App
+# HTML/JS интерфейс каталога YouTube с плеером внутри Mini App
 async def handle_player(request):
     html_content = """
     <!DOCTYPE html>
@@ -122,9 +122,7 @@ async def handle_player(request):
         </div>
 
         <!-- Лента видео -->
-        <div class="feed" id="videoFeed">
-            <!-- Сюда можно добавлять сколько угодно видео -->
-        </div>
+        <div class="feed" id="videoFeed"></div>
 
         <!-- Полноэкранный плеер внутри приложения -->
         <div id="playerView">
@@ -136,7 +134,6 @@ async def handle_player(request):
         </div>
 
         <script>
-            // Список готовых видео для каталога (можно легко менять ID и названия)
             const videos = [
                 { id: "jfKfPfyJRdk", title: "lofi hip hop radio - beats to study/relax to", channel: "Lofi Girl" },
                 { id: "5qap5aO4i9A", title: "Lofi Hip Hop - Beats to Relax/Study to [Live]", channel: "Lofi Girl Live" },
@@ -146,7 +143,6 @@ async def handle_player(request):
 
             const feed = document.getElementById('videoFeed');
 
-            // Отрисовка списка видео
             videos.forEach(video => {
                 const card = document.createElement('div');
                 card.className = 'video-card';
@@ -176,7 +172,7 @@ async def handle_player(request):
                 const playerView = document.getElementById('playerView');
                 const iframeBox = document.getElementById('iframeBox');
                 
-                iframeBox.innerHTML = ''; // Останавливает видео при закрытии
+                iframeBox.innerHTML = '';
                 playerView.style.display = 'none';
             }
         </script>
@@ -196,7 +192,7 @@ async def start_web_server():
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-    asyncio.gather(
+    await asyncio.gather(
         start_web_server(),
         dp.start_polling(bot)
     )
