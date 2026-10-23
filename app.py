@@ -22,7 +22,7 @@ dp = Dispatcher()
 
 main_inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Открыть YouTube App", web_app=WebAppInfo(url=YOUTUBE_URL))],
+        [InlineKeyboardButton(text="▶️ Открыть YouTube", web_app=WebAppInfo(url=YOUTUBE_URL))],
         [InlineKeyboardButton(text="🔄 Перезапустить", callback_data="restart")]
     ]
 )
@@ -36,7 +36,7 @@ async def command_start_handler(message: Message) -> None:
     
     await message.answer(
         f"Привет!\n\n"
-        f"Нажми на кнопку ниже, чтобы запустить каталог YouTube:",
+        f"Нажми на кнопку ниже, чтобы запустить YouTube:",
         reply_markup=main_inline_keyboard
     )
 
@@ -49,7 +49,7 @@ async def restart_callback(callback: CallbackQuery) -> None:
     )
     await callback.answer("Готово!")
 
-# HTML/JS интерфейс каталога YouTube с плеером внутри Mini App
+# HTML/JS клиент YouTube с поиском и лентой внутри Mini App
 async def handle_player(request):
     html_content = """
     <!DOCTYPE html>
@@ -65,11 +65,20 @@ async def handle_player(request):
                 overflow-x: hidden;
             }
             .header {
-                position: sticky; top: 0; background: #212121; padding: 12px 16px;
-                display: flex; align-items: center; justify-content: space-between;
+                position: sticky; top: 0; background: #212121; padding: 10px 14px;
+                display: flex; align-items: center; gap: 10px;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 100;
             }
-            .logo { font-size: 18px; font-weight: bold; color: #ff0000; display: flex; align-items: center; gap: 6px; }
+            .logo { font-size: 16px; font-weight: bold; color: #ff0000; white-space: nowrap; }
+            .search-box {
+                flex: 1; display: flex; background: #121212; border-radius: 20px; overflow: hidden; border: 1px solid #303030;
+            }
+            .search-box input {
+                flex: 1; background: transparent; border: none; padding: 8px 14px; color: #fff; font-size: 14px; outline: none;
+            }
+            .search-box button {
+                background: #222; border: none; color: #fff; padding: 0 14px; cursor: pointer; font-size: 14px;
+            }
             
             .feed {
                 padding: 12px; display: flex; flex-direction: column; gap: 16px;
@@ -113,52 +122,92 @@ async def handle_player(request):
             .player-container iframe {
                 width: 100%; height: 100%; border: none;
             }
+            .loading { text-align: center; color: #aaa; padding: 20px; font-size: 14px; }
         </style>
     </head>
     <body>
 
         <div class="header">
-            <div class="logo">▶ YouTube Mini</div>
+            <div class="logo">▶ YouTube</div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск видео...">
+                <button onclick="searchVideos()">🔍</button>
+            </div>
         </div>
 
         <!-- Лента видео -->
-        <div class="feed" id="videoFeed"></div>
+        <div class="feed" id="videoFeed">
+            <div class="loading">Загрузка рекомендаций...</div>
+        </div>
 
-        <!-- Полноэкранный плеер внутри приложения -->
+        <!-- Полноэкранный плеер -->
         <div id="playerView">
             <div class="player-header">
                 <button class="back-btn" onclick="closePlayer()">← Назад</button>
-                <span>Просмотр видео</span>
+                <span>Просмотр</span>
             </div>
             <div class="player-container" id="iframeBox"></div>
         </div>
 
         <script>
-            const videos = [
-                { id: "jfKfPfyJRdk", title: "lofi hip hop radio - beats to study/relax to", channel: "Lofi Girl" },
-                { id: "5qap5aO4i9A", title: "Lofi Hip Hop - Beats to Relax/Study to [Live]", channel: "Lofi Girl Live" },
-                { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up (Official Music Video)", channel: "Rick Astley" },
-                { id: "9bZkp7q19f0", title: "PSY - GANGNAM STYLE(강남스타일) M/V", channel: "officialpsy" }
-            ];
+            // Загрузка трендовых/популярных видео при старте через открытый API
+            async function loadTrending() {
+                const feed = document.getElementById('videoFeed');
+                feed.innerHTML = '<div class="loading">Загрузка...</div>';
+                try {
+                    const res = await fetch('https://pipedapi.kavin.rocks/trending?region=RU');
+                    const data = await res.json();
+                    renderVideos(data);
+                } catch (e) {
+                    feed.innerHTML = '<div class="loading">Не удалось загрузить ленту. Попробуйте поиск.</div>';
+                }
+            }
 
-            const feed = document.getElementById('videoFeed');
-
-            videos.forEach(video => {
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.onclick = () => openPlayer(video.id);
+            // Поиск видео
+            async function searchVideos() {
+                const query = document.getElementById('searchInput').value.trim();
+                if (!query) return;
                 
-                card.innerHTML = `
-                    <div class="thumbnail-container">
-                        <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="thumbnail">
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">${video.title}</div>
-                        <div class="video-channel">${video.channel}</div>
-                    </div>
-                `;
-                feed.appendChild(card);
-            });
+                const feed = document.getElementById('videoFeed');
+                feed.innerHTML = '<div class="loading">Ищем видео...</div>';
+                try {
+                    const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    renderVideos(data.items || data);
+                } catch (e) {
+                    feed.innerHTML = '<div class="loading">Ошибка поиска. Попробуйте еще раз.</div>';
+                }
+            }
+
+            // Отрисовка списка видео в ленте
+            function renderVideos(items) {
+                const feed = document.getElementById('videoFeed');
+                feed.innerHTML = '';
+                
+                items.forEach(item => {
+                    const videoId = item.url ? item.url.split('v=')[1] : item.videoId;
+                    if (!videoId) return;
+                    
+                    const title = item.title;
+                    const channel = item.uploaderName || item.author;
+                    const thumbnail = item.thumbnail || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+                    const card = document.createElement('div');
+                    card.className = 'video-card';
+                    card.onclick = () => openPlayer(videoId);
+                    
+                    card.innerHTML = `
+                        <div class="thumbnail-container">
+                            <img src="${thumbnail}" alt="thumbnail">
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${title}</div>
+                            <div class="video-channel">${channel}</div>
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+            }
 
             function openPlayer(id) {
                 const playerView = document.getElementById('playerView');
@@ -175,6 +224,9 @@ async def handle_player(request):
                 iframeBox.innerHTML = '';
                 playerView.style.display = 'none';
             }
+
+            // Запускаем загрузку трендов при открытии
+            loadTrending();
         </script>
     </body>
     </html>
