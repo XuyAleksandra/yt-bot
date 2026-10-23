@@ -14,7 +14,7 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-YOUTUBE_URL = "https://m.youtube.com"
+YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
 PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=TOKEN)
