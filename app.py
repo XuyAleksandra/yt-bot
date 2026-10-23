@@ -32,7 +32,7 @@ main_inline_keyboard = InlineKeyboardMarkup(
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     await message.answer(
-        f"Привет, {html.bold(message.from_user.full_name)}!\n\n"
+        f"Привет!\n\n"
         f"Нажми на кнопку ниже, чтобы запустить YouTube прямо внутри Telegram.",
         reply_markup=main_inline_keyboard
     )
