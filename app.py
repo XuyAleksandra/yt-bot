@@ -13,14 +13,13 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-# Рабочая ссылка через Cloudflare Worker для обхода блокировок
+# Ссылка на ваш Cloudflare Worker для обхода блокировок
 YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
 PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Клавиатура с кнопкой запуска YouTube и кнопкой перезапуска
 main_inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="▶️ Смотреть YouTube", web_app=WebAppInfo(url=YOUTUBE_URL))],
@@ -30,35 +29,64 @@ main_inline_keyboard = InlineKeyboardMarkup(
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    # Удаляем сообщение пользователя (/start), чтобы не засорять чат
     try:
         await message.delete()
     except Exception:
         pass
     
-    # Отправляем приветствие с обновленной клавиатурой
     await message.answer(
         f"Привет!\n\n"
-        f"Нажми на кнопку ниже, чтобы запустить YouTube прямо внутри Telegram.",
+        f"Нажми на кнопку ниже, чтобы запустить плеер:",
         reply_markup=main_inline_keyboard
     )
 
 @dp.callback_query(F.data == "restart")
 async def restart_callback(callback: CallbackQuery) -> None:
-    # Обновляем текущее сообщение при нажатии кнопки перезапуска
     await callback.message.edit_text(
         f"Привет!\n\n"
-        f"Бот успешно перезапущен. Нажми на кнопку ниже, чтобы открыть YouTube:",
+        f"Бот перезапущен. Нажми кнопку ниже:",
         reply_markup=main_inline_keyboard
     )
     await callback.answer("Готово!")
 
-async def handle_ping(request):
-    return web.Response(text="Bot is running!")
+# Легкая и стабильная HTML-страница с плеером YouTube
+async def handle_player(request):
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>YouTube Player</title>
+        <style>
+            body, html {
+                margin: 0; padding: 0; width: 100%; height: 100%;
+                background: #0f0f0f; display: flex; justify-content: center; align-items: center;
+                overflow: hidden;
+            }
+            .video-container {
+                width: 100%; height: 100%;
+            }
+            iframe {
+                width: 100%; height: 100%; border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
+        </div>
+    </body>
+    </html>
+    """
+    return web.Response(text=html_content, content_type='text/html')
 
 async def start_web_server():
     app = web.Application()
-    app.router.add_get("/", handle_ping)
+    app.router.add_get("/", handle_player)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
