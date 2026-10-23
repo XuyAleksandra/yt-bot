@@ -13,15 +13,16 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
+# Ссылка на твой Cloudflare Worker, который теперь проксирует настоящий YouTube
+YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
 PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Кнопка со ссылкой на официальный сайт YouTube (откроется в браузере)
 main_inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Открыть YouTube", url="https://www.youtube.com")],
+        [InlineKeyboardButton(text="▶️ Открыть YouTube", web_app=WebAppInfo(url=YOUTUBE_URL))],
         [InlineKeyboardButton(text="🔄 Перезапустить", callback_data="restart")]
     ]
 )
@@ -48,7 +49,6 @@ async def restart_callback(callback: CallbackQuery) -> None:
     )
     await callback.answer("Готово!")
 
-# Простой веб-сервер для поддержки активности Render
 async def handle_ping(request):
     return web.Response(text="Bot is running!")
 
