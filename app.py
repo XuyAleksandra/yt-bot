@@ -13,17 +13,16 @@ from aiogram.types import (
 )
 
 TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
-# Ссылка на твой Cloudflare Worker для обхода блокировок внутри Mini App
-YOUTUBE_URL = "https://wispy-sunset-4f8a.strelokklik.workers.dev"
+# Прямая ссылка на мобильный YouTube без прокси и воркеров
+YOUTUBE_URL = "https://m.youtube.com"
 PORT = int(os.getenv("PORT", 10000))
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Кнопка для открытия YouTube прямо в Telegram Mini App
 main_inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Открыть YouTube в Mini App", web_app=WebAppInfo(url=YOUTUBE_URL))],
+        [InlineKeyboardButton(text="▶️ Открыть YouTube", web_app=WebAppInfo(url=YOUTUBE_URL))],
         [InlineKeyboardButton(text="🔄 Перезапустить", callback_data="restart")]
     ]
 )
@@ -37,7 +36,7 @@ async def command_start_handler(message: Message) -> None:
     
     await message.answer(
         f"Привет!\n\n"
-        f"Нажми на кнопку ниже, чтобы запустить YouTube в мини-аппе:",
+        f"Нажми на кнопку ниже, чтобы запустить YouTube:",
         reply_markup=main_inline_keyboard
     )
 
@@ -53,21 +52,20 @@ async def restart_callback(callback: CallbackQuery) -> None:
 async def handle_ping(request):
     return web.Response(text="Bot is running!")
 
-async def start_web_server():
+async def main():
+    # 1. Запускаем локальный веб-сервер для Render
     app = web.Application()
     app.router.add_get("/", handle_ping)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
-    logging.info(f"Web server started on port {PORT}")
+    logging.info(f"Web server successfully started on port {PORT}")
 
-async def main():
+    # 2. Запускаем телеграм-бота
     await bot.delete_webhook(drop_pending_updates=True)
-    asyncio.gather(
-        start_web_server(),
-        dp.start_polling(bot)
-    )
+    logging.info("Starting bot polling...")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
