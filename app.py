@@ -12,7 +12,7 @@ from aiogram.types import (
     CallbackQuery
 )
 
-TOKEN = "8884918348:AAHKXppba5wpxs1aWKhYZU-_4PTuLjwLSfo"
+TOKEN = "8734782311:AAF2QubC5mKPVGWHeF5u-G5iEos_uaYCfoI"
 # Прямая ссылка на мобильный YouTube без сторонних прокси
 YOUTUBE_URL = "https://m.youtube.com"
 PORT = int(os.getenv("PORT", 10000))
